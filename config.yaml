@@ -1,0 +1,147 @@
+# Configurazione smartbox v4 – valori di partenza da tarare (notebook sez. 6 o demo browser "Calibra")
+# I segreti (password broker, token) NON stanno qui: vanno in secrets.yaml (vedi secrets.example.yaml).
+
+video:
+  source: 0                   # 0 = webcam USB; "csi" = Pi Camera (Picamera2); oppure percorso di un file video
+  width: 640
+  height: 480
+  rotation: 0                 # gradi in senso orario (−180 … 180, passo 1) se la camera è montata storta (D-44)
+  process_every_n_frames: 1   # 2-3 se il Raspberry non regge il frame rate
+  face_lost_seconds: 5        # volto non trovato per N s -> livello 1 "volto assente" (l'assenza di dati non è "sveglio")
+
+detector:                     # riconoscimento del volto (smartbox/detector.py, D-48)
+  min_detection_confidence: 0.5   # confidenza minima di MediaPipe per accettare un volto nuovo
+  min_tracking_confidence: 0.5    # ... e per continuare a seguirlo da un fotogramma all'altro
+
+indicators:
+  ear_closed_threshold: 0.21   # valore della tesi; sostituire con quello tarato dalla demo ("Calibra", criterio P80: chiusura oltre l'80%)
+  mar_yawn_threshold: 0.50
+  eye_closure_source: blendshape  # blendshape (palpebra chiusa vs occhi stretti, distingue il sole) | ear
+  blink_closed_threshold: 0.60    # occhio chiuso se palpebra >= 0,60 ...
+  blink_squint_margin: 0.25       # ... e palpebra - occhi stretti >= 0,25 (prova 10/11/2026: chiusi 0,70/0,21, socchiusi 0,54/0,58)
+  pitch_nod_threshold: 20.0   # gradi oltre la posizione normale del capo
+  pitch_baseline: 0.0         # posizione normale del capo misurata in taratura (D-41); 0 = nessuna taratura
+  window_seconds: 60          # finestra PERCLOS e sbadigli: 1 minuto come nella definizione originale (Wierwille 1994)
+
+alarm:
+  perclos_warning: 0.15
+  perclos_danger: 0.30
+  perclos_min_seconds: 55     # il PERCLOS dà allarme solo con la finestra (quasi) piena: con pochi secondi di dati un solo sguardo in basso vale il 15-50%
+  microsleep_seconds: 1.5
+  yawns_per_window_warning: 3 # 1 = anche lo sbadiglio isolato produce livello 1
+  yawn_min_seconds: 1.0
+  yawn_opening_fraction: 0.5  # bocca "in apertura" oltre questa frazione della soglia MAR: occhi e capo attribuiti allo sbadiglio (D-11)
+  yawn_masks_eye_closure: true  # occhi stretti mentre la bocca si apre: sbadiglio, non microsonno
+  yawn_eye_grace_seconds: 2.5   # dopo uno sbadiglio gli occhi restano chiusi ancora 1-2 s
+  nod_seconds: 1.0
+  nod_lost_fraction: 0.7      # volto perso con il capo già oltre il 70% della soglia: il chinamento continua (D-42)
+  hysteresis_seconds: 5
+  min_seconds_between_alerts: 10
+  gradual_descent: true       # true: 2 -> 1 -> 0 (segnale intermedio); false: 2 -> 0 come nel prototipo v3
+
+score:                        # punteggio continuo 0-1 della Proposta P1 (smartbox/score.py, registro D-27)
+  enabled: true
+  decide: false               # true: il livello finale è il massimo tra regole e punteggio; false: il punteggio è solo registrato
+  eye_seconds: 1.5            # occhi chiusi di continuo per questo tempo -> punteggio 0,75 (rosso)
+  head_seconds: 1.0           # capo chinato oltre pitch_nod_threshold per questo tempo -> 0,75
+  K: 1.0                      # peso degli occhi (Score_AI)
+  alpha: 1.0                  # peso del capo (Inerzia_capo)
+  beta: 0.0                   # peso dei dati del veicolo: predisposto, oggi nessun dato
+  yellow: 0.60                # soglia gialla: attenzione
+  red: 0.75                   # soglia rossa: pericolo
+  head_partial_weight: 0.5    # capo chinato sotto soglia: contributo proporzionale all'inclinazione, al massimo questo
+
+calibration:                  # taratura per soggetto (smartbox/calibration.py, D-24, D-36, D-45, D-48)
+  fraction: 0.8               # criterio P80: soglia all'80% del percorso aperti -> chiusi
+  min_gap: 0.15               # palpebra e scarto palpebra − occhi stretti devono cambiare almeno così, o la misura non è credibile
+  ear_distinct_ratio: 0.85    # EAR: aperti e chiusi indistinguibili se chiusi >= 0,85 × aperti
+  min_open_samples: 20        # fotogrammi minimi a occhi aperti ...
+  min_closed_samples: 10      # ... e a occhi chiusi
+  ear_limits: [0.08, 0.27]    # intervalli ammessi per le soglie calcolate
+  blink_limits: [0.30, 0.85]
+  margin_limits: [-0.30, 0.50]
+  phases:                     # taratura guidata sul dispositivo: secondi dall'avvio in cui finisce ogni fase (D-36)
+    prepara: 2.0
+    aperti: 7.0
+    chiudi: 8.0
+    chiusi: 11.0
+  head:                       # «Calibra capo» (D-45)
+    fraction: 0.7             # soglia del chinamento al 70% del chinamento misurato
+    min_drop_degrees: 8.0     # chinamento minimo perché la misura sia credibile
+    threshold_limits: [8, 35] # gradi: intervallo della soglia proposta
+    bowed_quantile: 0.75      # a capo chino il 75° percentile, non la mediana: chi si china in ritardo non annulla la misura
+    min_straight_samples: 15
+    min_bowed_samples: 8
+    phases:
+      capo_prepara: 3.0
+      capo_dritto: 7.0
+      capo_china: 10.0
+      capo_chino: 14.0
+
+evaluation:                   # valutazione delle prove (tools/, smartbox/protocol.py, smartbox-dashboard/logic.js; D-15)
+  tolerance_seconds: 3.0      # un allarme conta se arriva tra l'inizio dell'episodio e la fine + questo tempo
+
+demo:                         # solo demo nel browser (smartbox-dashboard/demo.js): taratura automatica all'avvio e "Calibra"
+  auto_seconds: 4             # secondi di occhi aperti misurati all'avvio
+  auto_ratio: 0.5             # soglia EAR provvisoria = 0,5 × EAR a occhi aperti (50% di chiusura)
+  auto_min_samples: 15
+  auto_max_tries: 3
+  ear_open_min: 0.17          # sotto questo EAR la misura "a occhi aperti" non è credibile
+  open_quantile: 0.75         # 75° percentile degli occhi aperti: battiti e sguardi in basso non abbassano la stima
+  keep_manual_ratio: 0.9      # una soglia tarata a mano resta se è sotto 0,9 × EAR a occhi aperti di adesso
+  calib_phases:               # "Calibra" nel browser: fine di ogni fase in secondi (D-24)
+    prepara: 1
+    aperti: 6
+    chiudi: 7
+    chiusi: 10
+
+outputs:
+  gpio_enabled: false        # true sul Raspberry con buzzer/LED collegati
+  buzzer_pin: 18
+  led_pin: 23
+  buzzer_sense_pin: null      # pin di retroazione corrente buzzer (opzionale) per il self-test
+  self_test_on_start: true    # impulso di prova all'avvio (requisito di sicurezza, tesi §3.14)
+  console_beep: true          # SOLO sviluppo: in veicolo mettere false
+  phone:                      # notifiche sul telefono del guidatore via ntfy sul Raspberry (C4, registro D-39)
+    enabled: false            # si accende in ~/smartbox-dati/locale.yaml; il token sta in secrets.yaml (phone.token)
+    url: http://127.0.0.1:2586
+    topic: smartbox
+    repeat_seconds: 30        # promemoria finché resta PERICOLO (0 = mai)
+    notify_recovery: true     # avviso discreto, senza suono, al ritorno a NORMALE
+  wearable:                   # vibrazione al polso (Proposta P1, C4): predisposta come optional, non realizzata
+    enabled: false
+    device: null              # es. indirizzo BLE dello smartwatch o identificativo dello smartphone gateway
+  log_csv: data/eventi.csv
+  outbox_db: data/outbox.sqlite   # coda store-and-forward degli eventi non ancora consegnati
+  retention_days: 30          # eventi consegnati più vecchi vengono cancellati dalla coda
+
+pagina:                       # pagina del dispositivo (anteprima, dati, prove, soglie) – registro D-41, D-43
+  telefono: false             # true in locale.yaml: raggiungibile anche dal telefono sull'hotspot, con password
+  interface: wlan0            # rete da cui è ammesso il telefono; ogni altra rete è rifiutata
+  # la password (solo hash PBKDF2) sta in ~/smartbox-dati/secrets.yaml, pagina.password_hash, scritta dalla procedura guidata
+
+gps:                          # posizione e velocità dallo smartphone (Traccar Client, protocollo OsmAnd) – D-37
+  enabled: false              # si accende in ~/smartbox-dati/locale.yaml; il token sta in secrets.yaml (gps.token)
+  port: 5055
+  interface: wlan0            # rete da cui sono ammesse le posizioni (hotspot del telefono); ogni altra è rifiutata
+  max_age_seconds: 15         # posizione più vecchia di così: "GPS assente"
+
+power:
+  acc_pin: null               # GPIO collegato (via optoisolatore) al segnale ACC del veicolo
+  shutdown_delay_seconds: 30
+  shutdown_on_acc_off: false  # true solo sul dispositivo installato
+
+forward:
+  vehicle_id: veicolo-01
+  status_every_seconds: 10    # heartbeat verso il backend (fps, temperatura, modalità)
+  mqtt:
+    enabled: false
+    host: smartbox.local      # NON localhost se il telefono/gateway è un altro dispositivo (tesi §3.7.3)
+    port: 1883
+    topic_prefix: smartbox    # topic: smartbox/<vehicle_id>/eventi e smartbox/<vehicle_id>/stato
+    tls: false
+    ca_cert: null
+  http:
+    enabled: false
+    url: http://localhost:8000/api/v1   # backend di questo pacchetto
+    timeout_seconds: 3

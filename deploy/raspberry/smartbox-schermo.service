@@ -1,0 +1,26 @@
+# Smartbox con allarme a schermo: parte da solo all'accensione del Raspberry (registro D-30).
+# Presuppone il progetto in /home/smartbox/perfez-2526-smartbox-edge-Congedo e l'ambiente creato da setup_pi.sh.
+# Installazione (una volta sola):
+#   sudo cp ~/perfez-2526-smartbox-edge-Congedo/deploy/raspberry/smartbox-schermo.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now smartbox-schermo
+[Unit]
+Description=Smartbox monitoraggio sonnolenza (allarme a schermo)
+After=multi-user.target systemd-udev-settle.service
+Wants=systemd-udev-settle.service
+
+[Service]
+Type=simple
+User=smartbox
+Group=smartbox
+SupplementaryGroups=video
+WorkingDirectory=/home/smartbox/perfez-2526-smartbox-edge-Congedo
+Environment=PYTHONUNBUFFERED=1
+# Prima dell'avvio (come root, prefisso +): cursore nascosto, schermo sempre acceso, console pulita
+ExecStartPre=+/bin/sh -c 'TERM=linux setterm --cursor off --blank 0 --powerdown 0 >/dev/tty1 </dev/tty1; TERM=linux clear >/dev/tty1'
+ExecStart=/home/smartbox/perfez-2526-smartbox-edge-Congedo/.venv/bin/python /home/smartbox/perfez-2526-smartbox-edge-Congedo/deploy/raspberry/schermo.py
+Restart=always
+RestartSec=3
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target

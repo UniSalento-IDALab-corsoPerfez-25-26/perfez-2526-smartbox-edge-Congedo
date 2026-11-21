@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="#ffffff"/>
+
+  <!-- Veicolo / edge -->
+  <rect x="16" y="40" width="440" height="300" rx="12" fill="#eef6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="32" y="64" font-size="15" font-weight="700" fill="#1e3a8a">① smartbox-edge · Raspberry Pi 5 nel veicolo</text>
+  <rect x="36" y="84" width="110" height="56" rx="8" fill="#fff" stroke="#93c5fd"/>
+  <text x="91" y="108" text-anchor="middle" font-weight="600">Webcam</text>
+  <text x="91" y="126" text-anchor="middle" fill="#475569" font-size="11">USB / Pi Camera</text>
+  <rect x="172" y="84" width="128" height="56" rx="8" fill="#fff" stroke="#93c5fd"/>
+  <text x="236" y="106" text-anchor="middle" font-weight="600">Detector</text>
+  <text x="236" y="124" text-anchor="middle" fill="#475569" font-size="11">MediaPipe: EAR, MAR,</text>
+  <text x="236" y="136" text-anchor="middle" fill="#475569" font-size="11">blendshape, pitch</text>
+  <rect x="326" y="84" width="112" height="56" rx="8" fill="#fff" stroke="#93c5fd"/>
+  <text x="382" y="106" text-anchor="middle" font-weight="600">Logica</text>
+  <text x="382" y="124" text-anchor="middle" fill="#475569" font-size="11">PERCLOS, microsonno,</text>
+  <text x="382" y="136" text-anchor="middle" fill="#475569" font-size="11">sbadigli, capo chino</text>
+  <line x1="146" y1="112" x2="170" y2="112" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="300" y1="112" x2="324" y2="112" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <rect x="172" y="176" width="128" height="56" rx="8" fill="#fff" stroke="#93c5fd"/>
+  <text x="236" y="198" text-anchor="middle" font-weight="600">Allarme in cabina</text>
+  <text x="236" y="216" text-anchor="middle" fill="#475569" font-size="11">monitor, buzzer/LED,</text>
+  <text x="236" y="228" text-anchor="middle" fill="#475569" font-size="11">notifica ntfy al telefono</text>
+  <rect x="326" y="176" width="112" height="56" rx="8" fill="#fff" stroke="#93c5fd"/>
+  <text x="382" y="198" text-anchor="middle" font-weight="600">Publisher</text>
+  <text x="382" y="216" text-anchor="middle" fill="#475569" font-size="11">coda SQLite</text>
+  <text x="382" y="228" text-anchor="middle" fill="#475569" font-size="11">store-and-forward</text>
+  <path d="M382 140 L382 174" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <path d="M352 140 L352 158 L236 158 L236 174" stroke="#475569" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <text x="36" y="270" fill="#1e3a8a" font-size="12" font-weight="600">Livelli: 0 NORMALE · 1 ATTENZIONE · 2 PERICOLO</text>
+  <text x="36" y="290" fill="#475569" font-size="12">Taratura per soggetto (P80) · GPS dal telefono (Traccar)</text>
+  <text x="36" y="310" fill="#b91c1c" font-size="12" font-weight="600">Nessuna immagine esce dal veicolo</text>
+  <text x="36" y="328" fill="#475569" font-size="12">solo {livello, motivo, PERCLOS, EAR, ora}</text>
+
+  <!-- Backend -->
+  <rect x="520" y="40" width="424" height="190" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="536" y="64" font-size="15" font-weight="700" fill="#065f46">② smartbox-backend · PC / server</text>
+  <rect x="540" y="84" width="118" height="56" rx="8" fill="#fff" stroke="#6ee7b7"/>
+  <text x="599" y="106" text-anchor="middle" font-weight="600">Mosquitto</text>
+  <text x="599" y="124" text-anchor="middle" fill="#475569" font-size="11">MQTT, TLS, ACL</text>
+  <rect x="680" y="84" width="244" height="56" rx="8" fill="#fff" stroke="#6ee7b7"/>
+  <text x="802" y="106" text-anchor="middle" font-weight="600">API FastAPI</text>
+  <text x="802" y="124" text-anchor="middle" fill="#475569" font-size="11">POST /events · /status · deduplica event_id</text>
+  <rect x="540" y="156" width="118" height="56" rx="8" fill="#fff" stroke="#6ee7b7"/>
+  <text x="599" y="180" text-anchor="middle" font-weight="600">SQLite</text>
+  <text x="599" y="198" text-anchor="middle" fill="#475569" font-size="11">conservazione 30 gg</text>
+  <rect x="680" y="156" width="118" height="56" rx="8" fill="#fff" stroke="#6ee7b7"/>
+  <text x="739" y="180" text-anchor="middle" font-weight="600">WebSocket</text>
+  <text x="739" y="198" text-anchor="middle" fill="#475569" font-size="11">tempo reale</text>
+  <rect x="816" y="156" width="108" height="56" rx="8" fill="#fff" stroke="#6ee7b7"/>
+  <text x="870" y="180" text-anchor="middle" font-weight="600">ntfy</text>
+  <text x="870" y="198" text-anchor="middle" fill="#475569" font-size="11">notifica push</text>
+  <line x1="658" y1="112" x2="678" y2="112" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <path d="M740 140 L740 154" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <path d="M700 140 L700 148 L599 148 L599 154" stroke="#475569" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <path d="M880 140 L880 154" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- edge -> backend -->
+  <path d="M438 204 L490 204 L490 112 L538 112" stroke="#475569" stroke-width="1.8" fill="none" marker-end="url(#a)"/>
+  <text x="462" y="196" font-size="11" fill="#475569">MQTT</text>
+  <text x="462" y="222" font-size="11" fill="#475569">o HTTP</text>
+
+  <!-- Dashboard -->
+  <rect x="520" y="262" width="424" height="190" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="536" y="286" font-size="15" font-weight="700" fill="#9a3412">③ smartbox-dashboard · browser</text>
+  <rect x="540" y="304" width="180" height="62" rx="8" fill="#fff" stroke="#fdba74"/>
+  <text x="630" y="328" text-anchor="middle" font-weight="600">Dashboard di flotta</text>
+  <text x="630" y="346" text-anchor="middle" fill="#475569" font-size="11">veicoli, eventi, statistiche,</text>
+  <text x="630" y="358" text-anchor="middle" fill="#475569" font-size="11">validazione, esportazione</text>
+  <rect x="744" y="304" width="180" height="62" rx="8" fill="#fff" stroke="#fdba74"/>
+  <text x="834" y="328" text-anchor="middle" font-weight="600">Demo nel browser</text>
+  <text x="834" y="346" text-anchor="middle" fill="#475569" font-size="11">MediaPipe JS + logic.js,</text>
+  <text x="834" y="358" text-anchor="middle" fill="#475569" font-size="11">calibrazione e protocollo 60 s</text>
+  <path d="M739 212 L739 240 L630 240 L630 302" stroke="#475569" stroke-width="1.8" fill="none" marker-end="url(#a)"/>
+  <text x="640" y="256" font-size="11" fill="#475569">REST + WebSocket</text>
+  <text x="540" y="396" fill="#475569" font-size="12">config.js generato da config.yaml dell'edge:</text>
+  <text x="540" y="414" fill="#475569" font-size="12">la demo usa le stesse soglie del dispositivo</text>
+  <path d="M300 340 L300 420 L536 420" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#a)"/>
+  <text x="310" y="410" font-size="11" fill="#64748b">stessa logica, stessi parametri</text>
+
+  <text x="16" y="24" font-size="16" font-weight="700" fill="#0f172a">Smartbox – architettura del sistema</text>
+  <text x="16" y="462" font-size="11" fill="#64748b">④ presentation: pagina web del progetto (GitHub Pages)</text>
+</svg>

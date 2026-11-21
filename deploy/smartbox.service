@@ -1,0 +1,19 @@
+# Avvio automatico all'accensione del veicolo (tesi §3.2.2 "Affidabilità").
+# sudo cp deploy/smartbox.service /etc/systemd/system/ && sudo systemctl enable --now smartbox
+[Unit]
+Description=Smartbox monitoraggio sonnolenza
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+User=smartbox
+WorkingDirectory=/opt/smartbox
+ExecStart=/opt/smartbox/.venv/bin/python -m smartbox.main --config /opt/smartbox/config.yaml --secrets /opt/smartbox/secrets.yaml
+Restart=always
+RestartSec=2
+# lo spegnimento su ACC chiama "sudo shutdown": consentirlo con una regola sudoers dedicata
+#   smartbox ALL=(root) NOPASSWD: /sbin/shutdown
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target

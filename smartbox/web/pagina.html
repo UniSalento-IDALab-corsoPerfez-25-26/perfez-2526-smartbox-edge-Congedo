@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smartbox dal vivo</title>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--ink:#1d2430;--mute:#5a6475;--line:#d5dae3;--acc:#13294b;--acc2:#2b5cab;
+--ok:#1d6b31;--okb:#d8f0dd;--warn:#7a5a00;--warnb:#fdf0c8;--err:#9b2a1f;--errb:#f8d9d6;--code:#eef1f6}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#11151c;--panel:#181e27;--ink:#e6e9ef;--mute:#9aa4b5;--line:#2c3542;
+--acc:#9db8ea;--acc2:#7aa2f0;--ok:#7fd193;--okb:#163222;--warn:#e8c25a;--warnb:#3a2f10;--err:#f19a90;--errb:#3d1a17;--code:#222a36}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,"Segoe UI",Calibri,Arial,sans-serif}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:18px;color:var(--acc)}
+.sp{flex:1}
+main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.box h2{font-size:15px;margin:0 0 8px;color:var(--acc)}
+img#video{width:100%;border-radius:8px;background:#000;display:block;aspect-ratio:4/3}
+#prompt{font-size:20px;font-weight:700;padding:10px 14px;border-radius:8px;background:var(--acc2);color:#fff;margin:10px 0 0;display:none}
+.lv{font-size:22px;font-weight:800;padding:8px 12px;border-radius:8px;text-align:center}
+.lv0{background:var(--okb);color:var(--ok)}.lv1{background:var(--warnb);color:var(--warn)}.lv2{background:var(--errb);color:var(--err)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin-top:10px}
+.kv{background:var(--code);border-radius:8px;padding:6px 9px}.kv .k{font-size:12px;color:var(--mute)}.kv .v{font-size:17px;font-weight:700}
+button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:7px 12px;cursor:pointer}
+button.pri{background:var(--acc2);border-color:var(--acc2);color:#fff}button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.set{display:grid;grid-template-columns:1fr 110px;gap:6px 10px;align-items:center;font-size:14px}
+.set input[type=number]{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);width:100%}
+.muted{color:var(--mute);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.okp{color:var(--ok);font-weight:600}.badp{color:var(--err);font-weight:600}
+.msg{margin-top:8px;font-size:14px}
+a{color:var(--acc2)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Smartbox dal vivo</h1><span class="muted">camera del dispositivo · nessuna immagine viene salvata</span>
+  <span class="sp"></span>
+  <label class="muted"><input type="checkbox" id="voice" checked> Istruzioni a voce</label>
+  <label class="muted" title="Se il telefono non ha una voce italiana installata, usa quella del servizio del telefono (il testo delle istruzioni può passare dalla rete)"><input type="checkbox" id="voice-net"> anche voce online</label>
+  <a class="muted" href="/logout" id="logout" style="display:none">Esci</a>
+</header>
+<main>
+  <section>
+    <div class="box">
+      <img id="video" src="/stream" alt="Immagine della camera del dispositivo">
+      <div id="prompt"></div>
+    </div>
+    <div class="box">
+      <h2>Comandi</h2>
+      <div class="row">
+        <button class="pri" id="b-calib">Calibra</button>
+        <button id="b-head">Calibra capo</button>
+        <button id="b-proto">Protocollo 60 s</button>
+        <button id="b-yawn">Prova sbadigli 60 s</button>
+        <button id="b-stop">Interrompi</button>
+      </div>
+      <p class="muted">Calibra: 5 s occhi aperti, poi chiudi gli occhi e conta fino a 5. Calibra capo (14 s, gli occhi
+        non cambiano): 4 s capo dritto, poi china il capo in avanti come addormentandoti e resta giù 4 s; misura la
+        posizione normale e imposta la soglia del chinamento al 70% di quanto scendi. Protocollo: segui la voce guardando la
+        camera, non lo schermo; non anticipare quando senti «Preparati». Durante le prove gli allarmi restano sullo schermo ma
+        non vanno né alla dashboard né al telefono.</p>
+      <div class="msg" id="msg"></div>
+    </div>
+    <div class="box">
+      <h2>Orientamento camera</h2>
+      <div class="row">
+        <button data-rot="-90">−90°</button><button data-rot="-1">−1°</button>
+        <input type="number" id="rot" step="1" min="-179" max="180" value="0" aria-label="Rotazione in gradi"
+               style="width:78px;font:inherit;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);text-align:center">
+        <button data-rot="1">+1°</button><button data-rot="90">+90°</button><button data-rot="0" id="rot0">Dritta (0°)</button>
+      </div>
+      <p class="muted">Se la camera è montata storta, gira l'immagine finché il volto appare dritto (gradi in senso orario).
+        Si applica subito e resta salvata sul dispositivo. Dopo aver cambiato l'orientamento rifai «Calibra».</p>
+      <div class="msg" id="rmsg"></div>
+    </div>
+    <div class="box" id="result-box" style="display:none"><h2>Risultato dell'ultima prova</h2><div id="result"></div></div>
+    <div class="box"><h2>Prove salvate sul dispositivo</h2><div id="prove" class="muted">—</div></div>
+  </section>
+  <section>
+    <div class="box">
+      <div id="level" class="lv lv0">—</div>
+      <div class="grid" id="data"></div>
+    </div>
+    <div class="box">
+      <h2>Soglie</h2>
+      <div class="set" id="settings"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="pri" id="b-save">Salva</button>
+        <button id="b-reload">Rileggi i valori</button>
+        <button id="b-reset">Valori di partenza</button>
+        <button id="b-uncal">Rimuovi taratura</button>
+      </div>
+      <p class="muted">Le soglie degli occhi vanno nella taratura del guidatore; le altre nelle impostazioni del dispositivo.
+        Tutto resta sul dispositivo, fuori dal repository.</p>
+      <div class="msg" id="smsg"></div>
+    </div>
+  </section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LEVEL = ["NORMALE", "ATTENZIONE", "PERICOLO"];
+const post = (path, body) => fetch(path, {method: "POST", headers: {"Content-Type": "application/json", "X-Smartbox": "1"},
+                                          body: JSON.stringify(body)}).then(r => r.json());
+
+// --- voce: solo voci italiane installate sul computer/telefono (nessun servizio in rete); altrimenti un segnale
+let spoken = "", audio = null;
+function tone(ms) {
+  try { audio = audio || new AudioContext(); const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = 880; o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + ms / 1000); } catch {}
+}
+function say(text) {
+  if (!text || text === spoken) return;
+  spoken = text;
+  if (!$("#voice").checked) return;
+  try {
+    const voices = speechSynthesis.getVoices().filter(v => v.lang?.toLowerCase().startsWith("it"));
+    const v = voices.find(v => v.localService) || ($("#voice-net").checked ? voices[0] : null);
+    if (!v) return tone(250);
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\s*\(\d+\)$/, "")); u.voice = v; u.lang = v.lang; u.rate = 1.05;
+    speechSynthesis.speak(u);
+  } catch { tone(250); }
+}
+try { speechSynthesis.getVoices(); } catch {}
+const CAL_SAY = {prepara: "Taratura. Guarda la camera con gli occhi aperti.", chiudi: "Chiudi gli occhi e conta fino a cinque.",
+                 esito: "Apri gli occhi.",
+                 capo_prepara: "Taratura del capo. Capo dritto, guarda davanti.",
+                 capo_china: "Ora china il capo e resta giù.",
+                 esito_capo: "Rialza il capo."};
+
+// --- dati in diretta
+let S = {}, settingsShown = false, lastResult = null, shownCalib = null, shownValues = {};
+function fmt(v, n = 2) { return v == null ? "—" : (typeof v === "number" ? v.toFixed(n) : v); }
+function render() {
+  const lv = S.level ?? 0;
+  $("#level").className = `lv lv${lv}`;
+  $("#level").textContent = LEVEL[lv] + (lv && S.reason ? ` · ${S.reason}` : "");
+  const items = [["Volto", S.face ? "trovato" : "non trovato"], ["Immagini/s", fmt(S.fps, 1)], ["PERCLOS", fmt(S.perclos)],
+    ["Score P1", fmt(S.score)], ["Palpebra", fmt(S.blink)], ["Occhi stretti", fmt(S.squint)], ["EAR", fmt(S.ear)],
+    ["Bocca (MAR)", fmt(S.mar)], ["Capo (gradi)", fmt(S.pitch, 0)],
+    ["Taratura", S.calib_date ? String(S.calib_date).slice(0, 16).replace("T", " ") : "standard"]];
+  if (S.gps !== null && S.gps !== undefined) items.push(["Velocità GPS", typeof S.gps === "number" ? `${S.gps.toFixed(0)} km/h` : S.gps]);
+  if (S.telefono) items.push(["Telefono", S.telefono]);
+  items.push(["Coda server", S.coda ?? "—"]);
+  $("#data").innerHTML = items.map(([k, v]) => `<div class="kv"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("");
+  // istruzioni: prova o taratura
+  let p = "";
+  if (S.prova) { p = S.prova.prompt; say(S.prova.say); }
+  else if (S.calib_phase) {
+    p = {prepara: "TARATURA: guarda la camera, occhi aperti", aperti: `OCCHI APERTI ${Math.ceil(S.calib_left)}`,
+         chiudi: "CHIUDI GLI OCCHI e conta fino a 5", chiusi: "CHIUDI GLI OCCHI e conta fino a 5", esito: `Taratura ${S.calib_msg}`,
+         capo_prepara: "TARATURA CAPO: capo dritto, guarda davanti", capo_dritto: `CAPO DRITTO ${Math.ceil(S.calib_left)}`,
+         capo_china: "CHINA IL CAPO in avanti e resta giù", capo_chino: `CAPO CHINO ${Math.ceil(S.calib_left)}: resta giù`}[S.calib_phase] || "";
+    const key = S.calib_phase === "esito" && S.calib_kind === "capo" ? "esito_capo" : S.calib_phase;
+    say(CAL_SAY[key] || (S.calib_phase === "esito" ? "" : spoken));
+  }
+  $("#prompt").style.display = p ? "block" : "none"; $("#prompt").textContent = p;
+  const busy = !!S.prova || (S.calib_phase && S.calib_phase !== "esito");
+  ["#b-calib", "#b-head", "#b-proto", "#b-yawn"].forEach(b => $(b).disabled = busy);
+  renderRotation();
+  if (!settingsShown && S.soglie) renderSettings();
+  else if (settingsShown && S.soglie && !edited().length && S.soglie.some(f =>   // valori cambiati sul dispositivo
+           (f.tipo === "bool" ? !!f.valore : +f.valore) !== shownValues[`${f.sezione}.${f.chiave}`])) renderSettings();
+  else if (settingsShown && S.calib_date !== shownCalib) {        // nuova taratura: il riquadro si aggiorna
+    if (!edited().length) renderSettings();
+    else {                                // aggiorna i campi non toccati, avvisa per quelli cambiati
+      const changed = new Set(edited().map(i => i.dataset.k));
+      S.soglie.forEach(f => { const k = `${f.sezione}.${f.chiave}`, el = document.querySelector(`[data-k="${k}"]`);
+        if (el && !changed.has(k)) { if (f.tipo === "bool") el.checked = !!f.valore; else el.value = f.valore; shownValues[k] = f.tipo === "bool" ? !!f.valore : +f.valore; } });
+      shownCalib = S.calib_date;
+      if ([...changed].some(k => k.startsWith("indicators.blink") || k === "indicators.ear_closed_threshold"))
+        $("#smsg").innerHTML = `<span class="badp">⚠ Nuova taratura: controlla le soglie degli occhi prima di salvare.</span>`;
+    }
+  }
+  if (S.ultimo_risultato && JSON.stringify(S.ultimo_risultato) !== lastResult) {
+    lastResult = JSON.stringify(S.ultimo_risultato); renderResult(S.ultimo_risultato); loadProve(); say("Prova finita.");
+  }
+}
+let fails = 0;
+async function poll() {
+  try {
+    S = await (await fetch("/api/stato", {cache: "no-store"})).json(); render(); fails = 0;
+    if ($("#msg").dataset.off) { $("#msg").innerHTML = ""; delete $("#msg").dataset.off; }
+  } catch {
+    if (++fails >= 5) { $("#msg").innerHTML = `<span class="badp">${OFFLINE}</span>`; $("#msg").dataset.off = "1"; }
+  }
+  setTimeout(poll, 400);
+}
+
+// --- soglie
+function edited() {                     // campi cambiati a mano rispetto ai valori mostrati
+  return [...document.querySelectorAll("#settings [data-k]")].filter(i =>
+    String(i.type === "checkbox" ? i.checked : +i.value) !== String(shownValues[i.dataset.k]));
+}
+function renderSettings() {
+  settingsShown = true; shownCalib = S.calib_date; shownValues = {};
+  S.soglie.forEach(f => shownValues[`${f.sezione}.${f.chiave}`] = f.tipo === "bool" ? !!f.valore : +f.valore);
+  $("#settings").innerHTML = S.soglie.map(f => f.tipo === "bool"
+    ? `<label for="s-${f.chiave}">${esc(f.etichetta)}</label><input type="checkbox" id="s-${f.chiave}" data-k="${f.sezione}.${f.chiave}" ${f.valore ? "checked" : ""}>`
+    : `<label for="s-${f.chiave}">${esc(f.etichetta)}</label><input type="number" id="s-${f.chiave}" data-k="${f.sezione}.${f.chiave}"
+        step="${f.passo}" min="${f.min}" max="${f.max}" value="${f.valore ?? ""}">`).join("");
+}
+async function settingsAction(azione, valori) {
+  let r;
+  try { r = await post("/api/impostazioni", {azione, valori}); }
+  catch { $("#smsg").innerHTML = `<span class="badp">${OFFLINE}</span>`; return; }
+  $("#smsg").innerHTML = `<span class="${r.ok ? "okp" : "badp"}">${esc(r.testo)}</span>`;
+  setTimeout(() => { settingsShown = false; }, 800);   // rilegge i valori applicati
+}
+$("#b-save").onclick = () => {
+  const CAL = ["indicators.blink_closed_threshold", "indicators.blink_squint_margin", "indicators.ear_closed_threshold"];
+  const ch = edited();
+  if (S.calib_date !== shownCalib && ch.some(i => CAL.includes(i.dataset.k))) {   // solo le soglie degli occhi rischiano
+    $("#smsg").innerHTML = `<span class="badp">⚠ Nel frattempo è stata fatta una nuova taratura: le soglie degli occhi mostrate
+      sono vecchie. Premi «Rileggi i valori», poi cambia di nuovo e salva.</span>`; return;
+  }
+  const valori = {};                     // solo i campi cambiati: un «Salva» non riscrive la taratura per errore
+  ch.forEach(i => valori[i.dataset.k] = i.type === "checkbox" ? i.checked : i.value);
+  if (!Object.keys(valori).length) { $("#smsg").innerHTML = `<span class="muted">Nessun valore cambiato.</span>`; return; }
+  settingsAction("salva", valori);
+};
+$("#b-reload").onclick = () => { settingsShown = false; $("#smsg").textContent = ""; };
+$("#b-reset").onclick = () => confirm("Tornare ai valori di partenza? (la taratura del guidatore resta)") && settingsAction("reset", {});
+$("#b-uncal").onclick = () => confirm("Rimuovere la taratura del guidatore e usare le soglie standard?") && settingsAction("rimuovi_taratura", {});
+
+// --- orientamento camera (D-44): ogni clic si applica subito; più clic ravvicinati partono come uno solo
+let rotShown = null, rotTimer = null;
+function rotNorm(v) { v = Math.round(+v || 0); return ((v + 179) % 360 + 360) % 360 - 179; }
+function rotSend(v) {
+  v = rotNorm(v); $("#rot").value = v; rotShown = v;
+  clearTimeout(rotTimer);
+  rotTimer = setTimeout(async () => {
+    let r;
+    try { r = await post("/api/impostazioni", {azione: "rotazione", valori: {gradi: v}}); }
+    catch { $("#rmsg").innerHTML = `<span class="badp">${OFFLINE}</span>`; rotTimer = null; return; }
+    $("#rmsg").innerHTML = `<span class="${r.ok ? "okp" : "badp"}">${esc(r.testo)}</span>`;
+    setTimeout(() => { rotTimer = null; }, 1500);     // poi torna a seguire il valore del dispositivo
+  }, 350);
+}
+document.querySelectorAll("[data-rot]").forEach(b => b.onclick = () =>
+  rotSend(b.dataset.rot === "0" ? 0 : (+$("#rot").value || 0) + +b.dataset.rot));
+$("#rot").onchange = () => rotSend($("#rot").value);
+function renderRotation() {             // mostra il valore del dispositivo, ma non mentre lo si sta cambiando
+  if (S.rotazione == null || document.activeElement === $("#rot") || rotTimer && rotShown !== S.rotazione) return;
+  if (rotShown !== S.rotazione) { $("#rot").value = S.rotazione; rotShown = S.rotazione; }
+}
+
+// --- comandi
+const OFFLINE = "Il Raspberry non risponde: la pagina deve essere aperta su localhost:8090 e il collegamento attivo " +
+                "(procedura guidata → Apri «Raspberry dal vivo»), poi ricarica la pagina.";
+async function cmd(c, label) {
+  spoken = ""; try { speechSynthesis.getVoices(); } catch {}
+  try {
+    const r = await post("/api/comando", {comando: c});
+    $("#msg").innerHTML = r.ok ? `<span class="okp">${label}</span>` : `<span class="badp">${esc(r.testo)}</span>`;
+  } catch { $("#msg").innerHTML = `<span class="badp">${OFFLINE}</span>`; }
+}
+$("#b-calib").onclick = () => cmd("calibra", "Taratura avviata: segui la voce.");
+$("#b-head").onclick = () => cmd("calibra_capo", "Taratura del capo avviata: capo dritto, poi chinalo quando te lo dice la voce.");
+$("#b-proto").onclick = () => cmd("protocollo", "Protocollo 60 s avviato: guarda la camera e segui la voce.");
+$("#b-yawn").onclick = () => cmd("sbadigli", "Prova sbadigli avviata: guarda la camera e segui la voce.");
+$("#b-stop").onclick = () => { try { speechSynthesis.cancel(); } catch {} cmd("interrompi", "Interrotto: la prova non è stata salvata."); };
+
+// --- risultato e prove salvate
+function renderResult(r) {
+  $("#result-box").style.display = "block";
+  let h = `<p class="muted">Salvata in <code>prove/${esc(r.cartella)}</code> · ${r.fotogrammi} fotogrammi · volto trovato ${Math.round(100 * r.volto_trovato)}%</p>`;
+  if (r.tipo === "sbadigli") {
+    const n = r.sbadigli.filter(x => x.contato_t != null).length;
+    h += `<p><b>Sbadigli contati ${n} / ${r.sbadigli.length}</b> · allarmi ${r.allarmi.length} · richiesti per l'allarme ${r.richiesti_per_allarme}</p><table>` +
+      r.sbadigli.map((x, i) => `<tr><td>sbadiglio ${i + 1}</td><td>${x.inizio}–${x.fine} s</td><td>${x.contato_t != null ? `<span class="okp">✓ contato a ${x.contato_t.toFixed(1)} s</span>` : `<span class="badp">✗ non contato</span>`}</td></tr>`).join("") +
+      r.allarmi.map(a => `<tr><td colspan="2" class="muted">allarme</td><td>${a.t.toFixed(1)} s (${esc(a.motivo)})</td></tr>`).join("") + "</table>";
+  } else {
+    h += `<p><b>Precisione ${r.precisione.toFixed(2)} · Richiamo ${r.richiamo.toFixed(2)}</b> · latenza media ${r.latenza_media != null ? r.latenza_media.toFixed(1) + " s" : "n.d."} · VP ${r.vp} / FP ${r.fp} / FN ${r.fn}</p><table>` +
+      r.dettaglio.map(d => `<tr><td>${esc(d.tipo)}</td><td>${d.inizio}–${d.fine} s</td><td>${d.allarme_t != null ? `<span class="okp">✓ ${d.allarme_t.toFixed(1)} s (${esc(d.motivo)}), latenza ${d.latenza.toFixed(1)} s</span>` : `<span class="badp">✗ mancato</span>`}</td></tr>`).join("") +
+      r.controlli.map(c => `<tr><td>${esc(c.tipo)} (controllo)</td><td>${c.inizio}–${c.fine} s</td><td>${c.allarme ? `<span class="badp">✗ allarme a ${c.allarme.t.toFixed(1)} s (${esc(c.allarme.motivo)})</span>` : `<span class="okp">✓ nessun allarme</span>`}</td></tr>`).join("") +
+      "</table>";
+  }
+  $("#result").innerHTML = h;
+}
+async function loadProve() {
+  try {
+    const list = await (await fetch("/api/prove", {cache: "no-store"})).json();
+    $("#prove").innerHTML = list.length ? `<table>${list.map(p => `<tr><td><b>${esc(p.nome)}</b></td><td>${
+      p.precisione != null ? `precisione ${p.precisione} · richiamo ${p.richiamo}` : (p.sbadigli ? `${p.sbadigli.filter(x => x.contato_t != null).length}/${p.sbadigli.length} sbadigli` : "")}</td><td>${
+      p.file.map(f => `<a href="/prove/${encodeURIComponent(p.nome)}/${f}">${f}</a>`).join(" · ")}</td></tr>`).join("")}</table>
+      <p class="muted">Per l'analisi sul Mac: scarica i file e importali nella procedura guidata (Prove e analisi → Registrare una prova).</p>`
+      : "Nessuna prova salvata finora.";
+  } catch {}
+}
+poll(); loadProve();
+if (!["localhost", "127.0.0.1"].includes(location.hostname)) $("#logout").style.display = "";   // aperta dal telefono
+</script>
+</body>
+</html>

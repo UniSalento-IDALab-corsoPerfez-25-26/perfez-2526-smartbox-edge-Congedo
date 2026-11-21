@@ -1,0 +1,9 @@
+# Segreti del veicolo: mai nel controllo di versione (tesi §3.12.6)
+secrets.yaml
+# Dati locali: registro eventi, coda store-and-forward, prove registrate
+data/
+# Ambiente Python (si ricrea con setup.ps1 o deploy/raspberry/setup_pi.sh) e cache
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc

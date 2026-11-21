@@ -1,0 +1,9 @@
+# Smartbox (dispositivo di bordo / PC di sviluppo)
+mediapipe==0.10.14        # si usa l API Tasks (FaceLandmarker con blendshape); la legacy resta come ripiego
+opencv-python>=4.8        # su Raspberry: opencv-python-headless
+numpy
+pyyaml
+paho-mqtt>=2.0
+requests
+pytest                    # test della logica
+# Solo su Raspberry Pi:  sudo apt install python3-picamera2 python3-gpiozero
